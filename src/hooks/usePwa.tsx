@@ -20,15 +20,11 @@ export function isIos() {
 }
 
 /** The PWA (service worker, manifest, install UI) is only offered on the
- *  app pages: login, signup and everything inside the clinic/admin
- *  dashboards. Every other page stays a plain website. */
-const APP_EXACT_PATHS = ["/login", "/signup", "/select-clinic"];
+ *  app area: everything under /app (login, signup, clinic and admin
+ *  dashboards). This matches the manifest scope, so public site links
+ *  always open in the normal browser, not the installed app. */
 export function isAppInstallPath(pathname = window.location.pathname) {
-  if (APP_EXACT_PATHS.includes(pathname)) return true;
-  return (
-    pathname.startsWith("/clinic/") ||
-    pathname.startsWith("/admin")
-  );
+  return pathname === "/app" || pathname.startsWith("/app/");
 }
 
 export function isPublicSitePath(pathname = window.location.pathname) {

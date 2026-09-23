@@ -3,7 +3,7 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ProtectedAdminRoute } from "@/components/admin/ProtectedAdminRoute";
@@ -173,6 +173,12 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Sends pre-/app URLs (e.g. /clinic/xyz/patients) to their /app equivalent. */
+function LegacyAppRedirect() {
+  const location = useLocation();
+  return <Navigate to={`/app${location.pathname}${location.search}${location.hash}`} replace />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -203,43 +209,53 @@ const App = () => (
             <Route path="/tutorials/:clinicType" element={<SiteTutorialClinicType />} />
             <Route path="/tutorials/:clinicType/:section" element={<SiteTutorialSection />} />
             <Route path="/tutorials/:clinicType/:section/:tutorial" element={<SiteTutorialDetail />} />
-            <Route path="/demo" element={<Navigate to="/signup" replace />} />
+            <Route path="/demo" element={<Navigate to="/app/signup" replace />} />
 
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
             <Route path="/site/:slug" element={<PublicClinicSite />} />
             <Route path="/site/:slug/shop" element={<PublicShopPage />} />
             <Route path="/site/:slug/shop/:productId" element={<PublicProductPage />} />
             <Route path="/result" element={<PublicResultPage />} />
-            <Route path="/select-clinic" element={<SelectClinic />} />
 
-            {/* Legacy redirect */}
-            <Route path="/dashboard" element={<Navigate to="/select-clinic" replace />} />
-            <Route path="/dashboard/*" element={<Navigate to="/select-clinic" replace />} />
+            {/* Legacy app URLs — bounce into the /app area */}
+            <Route path="/login" element={<Navigate to="/app/login" replace />} />
+            <Route path="/signup" element={<Navigate to="/app/signup" replace />} />
+            <Route path="/select-clinic" element={<Navigate to="/app/select-clinic" replace />} />
+            <Route path="/dashboard" element={<Navigate to="/app/select-clinic" replace />} />
+            <Route path="/dashboard/*" element={<Navigate to="/app/select-clinic" replace />} />
+            <Route path="/admin/*" element={<LegacyAppRedirect />} />
+            <Route path="/clinic/*" element={<LegacyAppRedirect />} />
 
-            {/* Admin routes */}
-            <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
-            <Route path="/admin/clinics" element={<AdminRoute><AdminClinics /></AdminRoute>} />
-            <Route path="/admin/clinics/:slug" element={<AdminRoute><AdminClinicDetail /></AdminRoute>} />
-            <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
-            <Route path="/admin/subscriptions" element={<AdminRoute><AdminSubscriptions /></AdminRoute>} />
-            <Route path="/admin/revenue" element={<AdminRoute><AdminRevenue /></AdminRoute>} />
-            <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
-            <Route path="/admin/onboarding" element={<AdminRoute><AdminOnboardingFunnel /></AdminRoute>} />
-            <Route path="/admin/announcements" element={<AdminRoute><AdminAnnouncements /></AdminRoute>} />
-            <Route path="/admin/support" element={<AdminRoute><AdminSupportTickets /></AdminRoute>} />
-            <Route path="/admin/notification-logs" element={<AdminRoute><AdminNotificationLogs /></AdminRoute>} />
-            <Route path="/admin/feature-flags" element={<AdminRoute><AdminFeatureFlags /></AdminRoute>} />
-            <Route path="/admin/settings" element={<AdminRoute><AdminPlatformSettings /></AdminRoute>} />
-            <Route path="/admin/audit-log" element={<AdminRoute><PlatformAuditLogPage /></AdminRoute>} />
-            <Route path="/admin/sessions" element={<AdminRoute><AdminLiveSessions /></AdminRoute>} />
-            <Route path="/admin/health" element={<AdminRoute><AdminHealthMonitoring /></AdminRoute>} />
-            <Route path="/admin/storage" element={<AdminRoute><AdminStorageMonitoring /></AdminRoute>} />
-            <Route path="/admin/data-export" element={<AdminRoute><AdminDataExport /></AdminRoute>} />
-            <Route path="/admin/white-label" element={<AdminRoute><AdminWhiteLabel /></AdminRoute>} />
+            {/* Installed-app area: everything under /app stays inside the PWA.
+                Public site links live outside this prefix, so they always open
+                in the normal browser instead of the installed app. */}
+            <Route path="/app">
+              <Route path="login" element={<Login />} />
+              <Route path="signup" element={<Signup />} />
+              <Route path="select-clinic" element={<SelectClinic />} />
 
-            {/* Clinic routes */}
-            <Route path="/clinic/:slug" element={<ClinicLayout />}>
+              {/* Admin routes */}
+              <Route path="admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
+              <Route path="admin/clinics" element={<AdminRoute><AdminClinics /></AdminRoute>} />
+              <Route path="admin/clinics/:slug" element={<AdminRoute><AdminClinicDetail /></AdminRoute>} />
+              <Route path="admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+              <Route path="admin/subscriptions" element={<AdminRoute><AdminSubscriptions /></AdminRoute>} />
+              <Route path="admin/revenue" element={<AdminRoute><AdminRevenue /></AdminRoute>} />
+              <Route path="admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+              <Route path="admin/onboarding" element={<AdminRoute><AdminOnboardingFunnel /></AdminRoute>} />
+              <Route path="admin/announcements" element={<AdminRoute><AdminAnnouncements /></AdminRoute>} />
+              <Route path="admin/support" element={<AdminRoute><AdminSupportTickets /></AdminRoute>} />
+              <Route path="admin/notification-logs" element={<AdminRoute><AdminNotificationLogs /></AdminRoute>} />
+              <Route path="admin/feature-flags" element={<AdminRoute><AdminFeatureFlags /></AdminRoute>} />
+              <Route path="admin/settings" element={<AdminRoute><AdminPlatformSettings /></AdminRoute>} />
+              <Route path="admin/audit-log" element={<AdminRoute><PlatformAuditLogPage /></AdminRoute>} />
+              <Route path="admin/sessions" element={<AdminRoute><AdminLiveSessions /></AdminRoute>} />
+              <Route path="admin/health" element={<AdminRoute><AdminHealthMonitoring /></AdminRoute>} />
+              <Route path="admin/storage" element={<AdminRoute><AdminStorageMonitoring /></AdminRoute>} />
+              <Route path="admin/data-export" element={<AdminRoute><AdminDataExport /></AdminRoute>} />
+              <Route path="admin/white-label" element={<AdminRoute><AdminWhiteLabel /></AdminRoute>} />
+
+              {/* Clinic routes */}
+              <Route path="clinic/:slug" element={<ClinicLayout />}>
               <Route path="dashboard" element={<DashboardHome />} />
               <Route path="patients" element={<PatientsPage />} />
               <Route path="patients/:id" element={<PatientProfilePage />} />
@@ -324,6 +340,7 @@ const App = () => (
               <Route path="eye/reports" element={<EyeReportsPage />} />
               <Route path="eye/charts" element={<EyeChartsPage />} />
               <Route path="eye/surgery" element={<SurgeryBookingsPage />} />
+              </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
