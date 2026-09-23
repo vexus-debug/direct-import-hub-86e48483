@@ -26,9 +26,9 @@ export function PwaRouteGate() {
       } catch {
         /* ignore */
       }
-      navigate(lastSlug ? `/clinic/${lastSlug}/dashboard` : "/select-clinic", { replace: true });
+      navigate(lastSlug ? `/app/clinic/${lastSlug}/dashboard` : "/app/select-clinic", { replace: true });
     } else {
-      navigate("/login", { replace: true });
+      navigate("/app/login", { replace: true });
     }
   }, [pathname, session, loading, navigate]);
 
